@@ -1,34 +1,36 @@
 name: Cross-Platform CMake CI
 
 on:
-push:
-branches:
-- '*develop*'
-- '*master*'
-pull_request:
-branches:
-- '*develop*'
-- '*master*'
+  push:
+    branches: [ "main", "master", "develop", "feature/**" ]
+  pull_request:
+    branches: [ "main", "master", "develop" ]
 
 jobs:
-cross_build:
-runs-on: ${{ matrix.os }}
-strategy:
-matrix:
-os: [ubuntu-latest, windows-latest, macos-latest]
-steps:
-- name: Checkout code
-uses: actions/checkout@v4
+  cross_build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
-- name: Run CI script (Linux/macOS)
-if: runner.os != 'Windows'
-run: |
-chmod +x ci.sh
-./ci.sh
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-- name: Run CI script (Windows)
-if: runner.os == 'Windows'
-run: .\ci.bat
+    # Для Linux та macOS прописуємо команди вручну, бо у вас може не бути ci.sh
+    - name: Configure, Build and Test (Linux/macOS)
+      if: runner.os != 'Windows'
+      run: |
+        cmake -S . -B build
+        cmake --build build
+        cd build && ctest --output-on-failure
 
-- name: Deploy
-run: echo "Deploy step goes here"
+    # Для Windows запускаємо ваш ci.bat, як вимагає методичка
+    - name: Configure, Build and Test (Windows)
+      if: runner.os == 'Windows'
+      run: .\ci.bat
+
+    - name: Deploy
+      run: echo "Deploy step placeholder"

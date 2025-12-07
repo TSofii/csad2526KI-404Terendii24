@@ -1,29 +1,32 @@
-name: Cross-Platform CMake CI
+name: Cross-Platform CI
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: [ "master", "develop", "main" ]
   pull_request:
-    branches: [ "main", "develop" ]
+    branches: [ "master", "develop", "main" ]
 
 jobs:
   build:
+    name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
     - uses: actions/checkout@v4
 
-    # Налаштування CMake (генерує файли збірки)
+    - name: Set up CMake
+      uses: jwlawson/actions-setup-cmake@v1.14
+
     - name: Configure CMake
-      run: cmake -S . -B build
+      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 
-    # Компіляція проєкту
     - name: Build
-      run: cmake --build build
+      run: cmake --build build --config Release
 
-    # Запуск тестів
     - name: Test
-      run: ctest --test-dir build --output-on-failure
+      working-directory: build
+      run: ctest -C Release --output-on-failure

@@ -2,35 +2,28 @@ name: Cross-Platform CMake CI
 
 on:
   push:
-    branches: [ "main", "master", "develop", "feature/**" ]
+    branches: [ "main", "develop" ]
   pull_request:
-    branches: [ "main", "master", "develop" ]
+    branches: [ "main", "develop" ]
 
 jobs:
-  cross_build:
-    name: Build on ${{ matrix.os }}
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-    # Для Linux та macOS прописуємо команди вручну, бо у вас може не бути ci.sh
-    - name: Configure, Build and Test (Linux/macOS)
-      if: runner.os != 'Windows'
-      run: |
-        cmake -S . -B build
-        cmake --build build
-        cd build && ctest --output-on-failure
+    # Налаштування CMake (генерує файли збірки)
+    - name: Configure CMake
+      run: cmake -S . -B build
 
-    # Для Windows запускаємо ваш ci.bat, як вимагає методичка
-    - name: Configure, Build and Test (Windows)
-      if: runner.os == 'Windows'
-      run: .\ci.bat
+    # Компіляція проєкту
+    - name: Build
+      run: cmake --build build
 
-    - name: Deploy
-      run: echo "Deploy step placeholder"
+    # Запуск тестів
+    - name: Test
+      run: ctest --test-dir build --output-on-failure

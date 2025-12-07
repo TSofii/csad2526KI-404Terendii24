@@ -21,12 +21,18 @@ jobs:
     - name: Set up CMake
       uses: jwlawson/actions-setup-cmake@v1.14
 
+    - name: Create Build Directory
+      run: cmake -E make_directory ${{github.workspace}}/build
+
     - name: Configure CMake
-      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      shell: bash
+      run: cmake -S . -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release
 
     - name: Build
-      run: cmake --build build --config Release
+      shell: bash
+      run: cmake --build ${{github.workspace}}/build --config Release
 
     - name: Test
-      working-directory: build
+      shell: bash
+      working-directory: ${{github.workspace}}/build
       run: ctest -C Release --output-on-failure
